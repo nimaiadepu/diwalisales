@@ -1,51 +1,98 @@
-# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# import python libraries
 
-import streamlit as st
-from streamlit.logger import get_logger
+import numpy as np 
+import pandas as pd 
+import matplotlib.pyplot as plt # visualizing data
+%matplotlib inline
+import seaborn as sns
+# import csv file
+df = pd.read_csv('Diwali Sales Data.csv', encoding= 'unicode_escape')
+df.shape
+df.head()
+df.info()
 
-LOGGER = get_logger(__name__)
+#drop unrelated/blank columns
+df.drop(['Status', 'unnamed1'], axis=1, inplace=True)
+#check for null values
+pd.isnull(df).sum()
+# drop null values
+df.dropna(inplace=True)
+# change data type
+df['Amount'] = df['Amount'].astype('int')
+df['Amount'].dtypes
 
+df.columns
+#rename column
+df.rename(columns= {'Marital_Status':'Shaadi'})
+# describe() method returns description of the data in the DataFrame (i.e. count, mean, std, etc)
+df.describe()
+# use describe() for specific columns
+df[['Age', 'Orders', 'Amount']].describe()
+# plotting a bar chart for Gender and it's count
 
-def run():
-    st.set_page_config(
-        page_title="Hello",
-        page_icon="👋",
-    )
+ax = sns.countplot(x = 'Gender',data = df)
 
-    st.write("# Welcome to Streamlit! 👋")
+for bars in ax.containers:
+    ax.bar_label(bars)
+# plotting a bar chart for gender vs total amount
 
-    st.sidebar.success("Select a demo above.")
+sales_gen = df.groupby(['Gender'], as_index=False)['Amount'].sum().sort_values(by='Amount', ascending=False)
 
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
-    )
+sns.barplot(x = 'Gender',y= 'Amount' ,data = sales_gen)
 
+ax = sns.countplot(data = df, x = 'Age Group', hue = 'Gender')
 
-if __name__ == "__main__":
-    run()
+for bars in ax.containers:
+    ax.bar_label(bars)
+# Total Amount vs Age Group
+sales_age = df.groupby(['Age Group'], as_index=False)['Amount'].sum().sort_values(by='Amount', ascending=False)
+
+sns.barplot(x = 'Age Group',y= 'Amount' ,data = sales_age)
+# total number of orders from top 10 states
+
+sales_state = df.groupby(['State'], as_index=False)['Orders'].sum().sort_values(by='Orders', ascending=False).head(10)
+
+sns.set(rc={'figure.figsize':(15,5)})
+sns.barplot(data = sales_state, x = 'State',y= 'Orders')
+# total amount/sales from top 10 states
+
+sales_state = df.groupby(['State'], as_index=False)['Amount'].sum().sort_values(by='Amount', ascending=False).head(10)
+
+sns.set(rc={'figure.figsize':(15,5)})
+sns.barplot(data = sales_state, x = 'State',y= 'Amount')
+ax = sns.countplot(data = df, x = 'Marital_Status')
+
+sns.set(rc={'figure.figsize':(7,5)})
+for bars in ax.containers:
+    ax.bar_label(bars)
+sales_state = df.groupby(['Marital_Status', 'Gender'], as_index=False)['Amount'].sum().sort_values(by='Amount', ascending=False)
+
+sns.set(rc={'figure.figsize':(6,5)})
+sns.barplot(data = sales_state, x = 'Marital_Status',y= 'Amount', hue='Gender')
+sns.set(rc={'figure.figsize':(20,5)})
+ax = sns.countplot(data = df, x = 'Occupation')
+
+for bars in ax.containers:
+    ax.bar_label(bars)
+sales_state = df.groupby(['Occupation'], as_index=False)['Amount'].sum().sort_values(by='Amount', ascending=False)
+
+sns.set(rc={'figure.figsize':(20,5)})
+sns.barplot(data = sales_state, x = 'Occupation',y= 'Amount')
+sns.set(rc={'figure.figsize':(20,5)})
+ax = sns.countplot(data = df, x = 'Product_Category')
+
+for bars in ax.containers:
+    ax.bar_label(bars)
+sales_state = df.groupby(['Product_Category'], as_index=False)['Amount'].sum().sort_values(by='Amount', ascending=False).head(10)
+
+sns.set(rc={'figure.figsize':(20,5)})
+sns.barplot(data = sales_state, x = 'Product_Category',y= 'Amount')
+sales_state = df.groupby(['Product_ID'], as_index=False)['Orders'].sum().sort_values(by='Orders', ascending=False).head(10)
+
+sns.set(rc={'figure.figsize':(20,5)})
+sns.barplot(data = sales_state, x = 'Product_ID',y= 'Orders')
+
+# top 10 most sold products (same thing as above)
+
+fig1, ax1 = plt.subplots(figsize=(12,7))
+df.groupby('Product_ID')['Orders'].sum().nlargest(10).sort_values(ascending=False).plot(kind='bar')
